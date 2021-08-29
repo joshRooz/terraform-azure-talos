@@ -26,7 +26,9 @@ sudo chmod +x /usr/local/bin/talosctl
 ```
 
 # Authenticate to Azure
+```sh
 az login --tenant <some-tenant-name-or-id>
+```
 
 # Azure Storage Account - SAS Keys
 SAS Keys have been disabled in favour of RBAC with Storage Blob Data Contributor role assignment. However, the role assignment doesn't seem to be honoured right away and the VHD upload (`azurerm_storage_blob.this`) may fail with an `autorest/azure: error reponse cannot be parsed...` message. Try again after some time and the upload will succeed.
