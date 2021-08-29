@@ -1,80 +1,3 @@
-terraform {
-  required_version = ">= 1.0.5"
-  required_providers {
-    azurerm = {
-      source  = "hashicorp/azurerm"
-      version = "~> 2.74.0"
-    }
-    azuread = {
-      source  = "hashicorp/azuread"
-      version = "~>2.0.1"
-    }
-    random = {
-      source  = "hashicorp/random"
-      version = "~> 3.1.0"
-    }
-    http = {
-      source  = "hashicorp/http"
-      version = "~> 2.1.0"
-    }
-    null = {
-      source  = "hashicorp/null"
-      version = "~> 3.1.0"
-    }
-  }
-}
-
-provider "azurerm" {
-  features {}
-
-  storage_use_azuread = true
-}
-
-provider "azuread" {}
-
-provider "random" {}
-
-provider "http" {}
-
-provider "null" {}
-
-variable "namespace" {
-  description = "Project namespace to use for a unique and consistent naming convention."
-  type        = string
-  default     = "talos"
-}
-
-variable "region" {
-  description = "Name of the Azure region to deploy resources."
-  type        = string
-  default     = "australiasoutheast"
-}
-
-variable "vnet_address_space" {
-  description = "Address space for Talos virtual network."
-  type        = string
-  default     = "192.168.254.0/23"
-}
-
-variable "subnet_address_space" {
-  description = "Address space for the Talos subnet."
-  type        = string
-  default     = "192.168.254.0/24"
-}
-
-variable "controlplane_admin" {
-  description = "Admin username for controlplane VMs but don't expect it to be useful."
-  type        = string
-  sensitive   = true
-}
-
-variable "worker_admin" {
-  description = "Admin username for worker VMs but don't expect it to be useful."
-  type        = string
-  sensitive   = true
-}
-
-
 resource "random_pet" "this" {
   length    = 1
   prefix    = var.namespace
@@ -110,7 +33,6 @@ resource "azurerm_storage_account" "this" {
   shared_access_key_enabled = false
 }
 
-
 resource "azurerm_storage_container" "this" {
   name                 = "vhds"
   storage_account_name = azurerm_storage_account.this.name
@@ -119,7 +41,6 @@ resource "azurerm_storage_container" "this" {
     azurerm_role_assignment.this
   ]
 }
-
 
 resource "azurerm_storage_blob" "this" {
   name                   = "talos-amd64-v0-11-5.vhd"
@@ -152,52 +73,51 @@ resource "azurerm_network_security_group" "this" {
   resource_group_name = azurerm_resource_group.this.name
 
   security_rule {
-    name                       = "apid"
-    priority                   = 1001
-    direction                  = "Inbound"
-    access                     = "Allow"
-    protocol                   = "Tcp"
-    source_port_range          = "*"
-    destination_port_range     = "50000"
-    source_address_prefix      = data.http.tf_client.body
-    destination_address_prefix = var.subnet_address_space
+    name                         = "apid"
+    priority                     = 1001
+    direction                    = "Inbound"
+    access                       = "Allow"
+    protocol                     = "Tcp"
+    source_port_range            = "*"
+    destination_port_range       = "50000"
+    source_address_prefix        = data.http.tf_client.body
+    destination_address_prefixes = var.subnet_address_spaces
   }
 
   security_rule {
-    name                       = "trustd"
-    priority                   = 1002
-    direction                  = "Inbound"
-    access                     = "Allow"
-    protocol                   = "Tcp"
-    source_port_range          = "*"
-    destination_port_range     = "50001"
-    source_address_prefix      = data.http.tf_client.body
-    destination_address_prefix = var.subnet_address_space
-  }
-
-
-  security_rule {
-    name                       = "etcd"
-    priority                   = 1003
-    direction                  = "Inbound"
-    access                     = "Allow"
-    protocol                   = "Tcp"
-    source_port_range          = "*"
-    destination_port_range     = "2379-2380"
-    source_address_prefix      = data.http.tf_client.body
-    destination_address_prefix = var.subnet_address_space
+    name                         = "trustd"
+    priority                     = 1002
+    direction                    = "Inbound"
+    access                       = "Allow"
+    protocol                     = "Tcp"
+    source_port_range            = "*"
+    destination_port_range       = "50001"
+    source_address_prefix        = data.http.tf_client.body
+    destination_address_prefixes = var.subnet_address_spaces
   }
 
   security_rule {
-    name                       = "kube"
-    priority                   = 1004
-    direction                  = "Inbound"
-    access                     = "Allow"
-    protocol                   = "Tcp"
-    source_port_range          = "*"
-    destination_port_range     = "6443"
-    source_address_prefix      = data.http.tf_client.body
-    destination_address_prefix = var.subnet_address_space
+    name                         = "etcd"
+    priority                     = 1003
+    direction                    = "Inbound"
+    access                       = "Allow"
+    protocol                     = "Tcp"
+    source_port_range            = "*"
+    destination_port_range       = "2379-2380"
+    source_address_prefix        = data.http.tf_client.body
+    destination_address_prefixes = var.subnet_address_spaces
+  }
+
+  security_rule {
+    name                         = "kube"
+    priority                     = 1004
+    direction                    = "Inbound"
+    access                       = "Allow"
+    protocol                     = "Tcp"
+    source_port_range            = "*"
+    destination_port_range       = "6443"
+    source_address_prefix        = data.http.tf_client.body
+    destination_address_prefixes = var.subnet_address_spaces
   }
 }
 
@@ -206,16 +126,22 @@ resource "azurerm_virtual_network" "this" {
   location            = azurerm_resource_group.this.location
   resource_group_name = azurerm_resource_group.this.name
   address_space       = [var.vnet_address_space]
+}
 
-  subnet {
-    name           = "talos-subnet"
-    address_prefix = var.subnet_address_space
-    security_group = azurerm_network_security_group.this.id
-  }
+resource "azurerm_subnet" "this" {
+  name                 = "talos-subnet"
+  resource_group_name  = azurerm_resource_group.this.name
+  virtual_network_name = azurerm_virtual_network.this.name
+  address_prefixes     = var.subnet_address_spaces
+}
+
+resource "azurerm_subnet_network_security_group_association" "this" {
+  network_security_group_id = azurerm_network_security_group.this.id
+  subnet_id                 = azurerm_subnet.this.id
 }
 
 resource "azurerm_public_ip" "lb" {
-  name                = join("-", ["pip", "lb", random_pet.this.id, random_integer.this.id])
+  name                = join("-", ["pip", random_pet.this.id, "lb", random_integer.this.id])
   location            = azurerm_resource_group.this.location
   resource_group_name = azurerm_resource_group.this.name
   allocation_method   = "Static"
@@ -258,28 +184,34 @@ resource "azurerm_lb_rule" "this" {
   probe_id                       = azurerm_lb_probe.this.id
 }
 
-resource "azurerm_public_ip" "nic" {
-  for_each = toset(["01", "02", "03"])
+locals {
+  controlplane_instances = [
+    for i in range(1, var.controlplane_instances + 1) : join("", ["0", tostring(i)])
+  ]
+}
 
-  name                = join("-", ["pip", each.value, "ctrl", random_pet.this.id, random_integer.this.id])
+resource "azurerm_public_ip" "controlplane" {
+  for_each = toset(local.controlplane_instances)
+
+  name                = join("-", ["pip", random_pet.this.id, "controlplane", random_integer.this.id, each.value])
   location            = azurerm_resource_group.this.location
   resource_group_name = azurerm_resource_group.this.name
   allocation_method   = "Static"
-  domain_name_label   = join("-", ["pip", "talos-control-plane", each.value])
+  domain_name_label   = join("-", ["pip", random_pet.this.id, "controlplane", random_integer.this.id, each.value])
 }
 
-resource "azurerm_network_interface" "this" {
-  for_each = toset(["01", "02", "03"])
+resource "azurerm_network_interface" "controlplane" {
+  for_each = toset(local.controlplane_instances)
 
-  name                = join("-", ["nic", "talos-control-plane", each.value])
+  name                = join("-", ["nic", random_pet.this.id, "controlplane", random_integer.this.id, each.value])
   location            = azurerm_resource_group.this.location
   resource_group_name = azurerm_resource_group.this.name
 
   ip_configuration {
     name                          = "ipconfig"
-    subnet_id                     = element(azurerm_virtual_network.this.subnet[*].id, 0) # not ideal
+    subnet_id                     = azurerm_subnet.this.id
     private_ip_address_allocation = "Dynamic"
-    public_ip_address_id          = azurerm_public_ip.nic[each.value].id
+    public_ip_address_id          = azurerm_public_ip.controlplane[each.value].id
   }
 }
 
@@ -295,25 +227,25 @@ resource "null_resource" "this" {
 }
 
 resource "azurerm_availability_set" "this" {
-  name                        = join("-", ["as", random_pet.this.id, random_integer.this.id])
+  name                        = join("-", ["as", random_pet.this.id, "controlplane", random_integer.this.id])
   location                    = azurerm_resource_group.this.location
   resource_group_name         = azurerm_resource_group.this.name
   platform_fault_domain_count = azurerm_resource_group.this.location == "australiasoutheast" ? 2 : 3
 }
 
-resource "azurerm_virtual_machine" "ctrl" {
-  for_each = toset(["01", "02", "03"])
+resource "azurerm_virtual_machine" "controlplane" {
+  for_each = toset(local.controlplane_instances)
 
-  name                          = join("-", ["vm", "talos-controlplane", each.value])
+  name                          = join("-", ["vm", random_pet.this.id, "controlplane", random_integer.this.id, each.value])
   location                      = azurerm_resource_group.this.location
   resource_group_name           = azurerm_resource_group.this.name
-  network_interface_ids         = [azurerm_network_interface.this[each.value].id]
+  network_interface_ids         = [azurerm_network_interface.controlplane[each.value].id]
   vm_size                       = "Standard_B1ls"
   availability_set_id           = azurerm_availability_set.this.id
   delete_os_disk_on_termination = true
 
   os_profile {
-    computer_name  = join("-", ["vm", "talos-controlplane", each.value])
+    computer_name  = join("-", ["vm", random_pet.this.id, "controlplane", each.value])
     admin_username = var.controlplane_admin
     custom_data    = file("./controlplane.yaml")
   }
@@ -331,7 +263,7 @@ resource "azurerm_virtual_machine" "ctrl" {
   }
 
   storage_os_disk {
-    name          = join("-", ["osdisk", "talos-controlplane", each.value])
+    name          = join("-", ["osdisk", random_pet.this.id, "controlplane", random_integer.this.id, each.value])
     create_option = "FromImage"
     caching       = "None"
     disk_size_gb  = 10
@@ -339,25 +271,65 @@ resource "azurerm_virtual_machine" "ctrl" {
   }
 }
 
-#--------------
-# Outputs
-#--------------
-output "resource_group_name" {
-  description = "Resource group name that was dynamically created."
-  value       = azurerm_resource_group.this.name
+locals {
+  worker_instances_to_ten = [
+    for i in range(1, var.worker_instances + 1) : join("", ["0", tostring(i)])
+    if i < 10
+  ]
+  worker_instances_ten_to_hundred = [
+    for i in range(1, var.worker_instances + 1) : tostring(i)
+    if i >= 10
+  ]
+  worker_instances = concat(local.worker_instances_to_ten, local.worker_instances_ten_to_hundred)
 }
 
-output "client_public_ip" {
-  description = "Public IP of the Terraform client."
-  value       = data.http.tf_client.body
+resource "azurerm_network_interface" "worker" {
+  for_each = toset(local.worker_instances)
+
+  name                = join("-", ["nic", random_pet.this.id, "worker", random_integer.this.id, each.value])
+  location            = azurerm_resource_group.this.location
+  resource_group_name = azurerm_resource_group.this.name
+
+  ip_configuration {
+    name                          = "ipconfig"
+    subnet_id                     = azurerm_subnet.this.id
+    private_ip_address_allocation = "Dynamic"
+  }
 }
 
-output "lb_public_ip" {
-  description = "Public facing IP of load balancer for Talos."
-  value       = azurerm_public_ip.lb.ip_address
-}
+resource "azurerm_virtual_machine" "worker" {
+  for_each = toset(local.worker_instances)
 
-output "controlplane_public_ips" {
-  description = "Public IPs for controlplan VMs."
-  value       = { for k, v in azurerm_public_ip.nic : v.name => v.ip_address }
+  name                          = join("-", ["vm", random_pet.this.id, "worker", random_integer.this.id, each.value])
+  location                      = azurerm_resource_group.this.location
+  resource_group_name           = azurerm_resource_group.this.name
+  network_interface_ids         = [azurerm_network_interface.worker[each.value].id]
+  vm_size                       = "Standard_B1ls"
+  delete_os_disk_on_termination = true
+
+  os_profile {
+    computer_name  = join("-", ["vm", random_pet.this.id, "worker", each.value])
+    admin_username = var.worker_admin
+    custom_data    = file("./join.yaml")
+  }
+
+  os_profile_linux_config {
+    disable_password_authentication = true
+    ssh_keys {
+      key_data = file("./dummy.pub")
+      path     = "/home/${var.controlplane_admin}/.ssh/authorized_keys"
+    }
+  }
+
+  storage_image_reference {
+    id = azurerm_image.this.id
+  }
+
+  storage_os_disk {
+    name          = join("-", ["osdisk", random_pet.this.id, "worker", random_integer.this.id, each.value])
+    create_option = "FromImage"
+    caching       = "None"
+    disk_size_gb  = 10
+    os_type       = "Linux"
+  }
 }

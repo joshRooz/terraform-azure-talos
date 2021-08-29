@@ -1,0 +1,22 @@
+name: terraform-docs
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  docs:
+    name: Terraform-docs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Run terraform-docs
+        uses: terraform-docs/gh-actions@v0.6.1
+        with:
+          working-dir: .
+          output-file: USAGE.md
+          output-method: inject
+          git-push: "true"

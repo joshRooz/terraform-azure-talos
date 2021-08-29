@@ -6,15 +6,17 @@
 
 # Clone the Repo
 ```sh
-git clone <this-repo>
+git clone https://github.com/joshRooz/terraform-azure-talos.git
 ```
 
 # Download Talos Azure Image & talosctl
 ```sh
-cd <cloned-repo-working-dir>
-wget https://github.com/talos-systems/talos/releases/download/v0.11.5/azure-amd64.tar.gz
-wget https://github.com/talos-systems/talos/releases/download/v0.11.5/sha256sum.txt
-sudo curl -Lo /usr/local/bin/talosctl https://github.com/talos-systems/talos/releases/v0.11.5/download/talosctl-$(uname -s | tr "[:upper:]" "[:lower:]")-amd64
+TALOS_VERSION="v0.11.5"
+
+cd terraform-azure-talos
+wget https://github.com/talos-systems/talos/releases/download/${TALOS_VERSION}/azure-amd64.tar.gz
+wget https://github.com/talos-systems/talos/releases/download/${TALOS_VERSION}/sha256sum.txt
+sudo curl -Lo /usr/local/bin/talosctl https://github.com/talos-systems/talos/releases/${TALOS_VERSION}/download/talosctl-$(uname -s | tr "[:upper:]" "[:lower:]")-amd64
 
 egrep $(sha256sum azure-amd64.tar.gz /usr/local/bin/talosctl) sha256sum.txt | wc -l
 
@@ -25,11 +27,15 @@ sudo chmod +x /usr/local/bin/talosctl
 # Authenticate to Azure
 az login --tenant <some-tenant-name-or-id>
 
+# Azurerm Provider Block
+This module disables SAS Keys on the storage account in favour of RBAC by default. Please include  `storage_use_azuread = true` in the `provider "azurerm"` block.
+
 # Run Terraform
+
 ```sh
 terraform init
 terraform plan [-out=the-plan]
-terraform apply -var=controlplane_admin=example-ctrl -var=controlplane_admin=example-wrkr [-auto-approve the-plan]
+terraform apply -var=controlplane_admin=example-ctrl -var=controlplane_admin=example-wrkr [-auto-approve] [the-plan]
 ```
 
 # Cluster Config
@@ -38,4 +44,5 @@ talosctl gen config talos-k8s-azure-tutorial https://$(terraform output lb_publi
 ```
 
 # Reference
+* https://www.talos.dev/docs/v0.11/introduction/getting-started/
 * https://www.talos.dev/docs/v0.11/cloud-platforms/azure
