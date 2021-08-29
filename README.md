@@ -16,9 +16,10 @@ TALOS_VERSION="v0.11.5"
 cd terraform-azure-talos
 wget https://github.com/talos-systems/talos/releases/download/${TALOS_VERSION}/azure-amd64.tar.gz
 wget https://github.com/talos-systems/talos/releases/download/${TALOS_VERSION}/sha256sum.txt
-sudo curl -Lo /usr/local/bin/talosctl https://github.com/talos-systems/talos/releases/${TALOS_VERSION}/download/talosctl-$(uname -s | tr "[:upper:]" "[:lower:]")-amd64
+sudo curl -Lo /usr/local/bin/talosctl https://github.com/talos-systems/talos/releases/download/${TALOS_VERSION}/talosctl-$(uname -s | tr "[:upper:]" "[:lower:]")-amd64
 
-egrep $(sha256sum azure-amd64.tar.gz /usr/local/bin/talosctl) sha256sum.txt | wc -l
+egrep $(sha256sum azure-amd64.tar.gz) sha256sum.txt | wc -l
+egrep $(sha256sum /usr/local/bin/talosctl) sha256sum.txt | wc -l
 
 tar -zxvf azure-amd64.tar.gz  # decompresses 'disk.vhd' in v0.11.5
 sudo chmod +x /usr/local/bin/talosctl
@@ -27,8 +28,8 @@ sudo chmod +x /usr/local/bin/talosctl
 # Authenticate to Azure
 az login --tenant <some-tenant-name-or-id>
 
-# Azurerm Provider Block
-This module disables SAS Keys on the storage account in favour of RBAC by default. Please include  `storage_use_azuread = true` in the `provider "azurerm"` block.
+# Azure Storage Account - SAS Keys
+SAS Keys have been disabled in favour of RBAC with Storage Blob Data Contributor role assignment. However, the role assignment doesn't seem to be honoured right away and the VHD upload (`azurerm_storage_blob.this`) may fail with an `autorest/azure: error reponse cannot be parsed...` message. Try again after some time and the upload will succeed.
 
 # Run Terraform
 
