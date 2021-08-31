@@ -293,6 +293,11 @@ resource "azurerm_virtual_machine" "controlplane" {
     disk_size_gb  = 10
     os_type       = "Linux"
   }
+
+  boot_diagnostics {
+    enabled     = true
+    storage_uri = azurerm_storage_account.this.primary_blob_endpoint
+  }
 }
 
 locals {
@@ -355,5 +360,10 @@ resource "azurerm_virtual_machine" "worker" {
     caching       = "None"
     disk_size_gb  = 10
     os_type       = "Linux"
+  }
+
+  boot_diagnostics {
+    enabled     = true
+    storage_uri = azurerm_storage_account.this.primary_blob_endpoint
   }
 }
