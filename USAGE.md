@@ -34,6 +34,7 @@ No modules.
 | [azurerm_image.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/image) | resource |
 | [azurerm_lb.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/lb) | resource |
 | [azurerm_lb_backend_address_pool.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/lb_backend_address_pool) | resource |
+| [azurerm_lb_backend_address_pool_address.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/lb_backend_address_pool_address) | resource |
 | [azurerm_lb_probe.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/lb_probe) | resource |
 | [azurerm_lb_rule.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/lb_rule) | resource |
 | [azurerm_network_interface.controlplane](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/network_interface) | resource |
@@ -44,6 +45,7 @@ No modules.
 | [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) | resource |
 | [azurerm_role_assignment.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
 | [azurerm_storage_account.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/storage_account) | resource |
+| [azurerm_storage_account_network_rules.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/storage_account_network_rules) | resource |
 | [azurerm_storage_blob.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/storage_blob) | resource |
 | [azurerm_storage_container.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/storage_container) | resource |
 | [azurerm_subnet.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet) | resource |
@@ -61,13 +63,11 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_controlplane_admin"></a> [controlplane\_admin](#input\_controlplane\_admin) | Admin username for controlplane VMs but don't expect it to be useful. | `string` | n/a | yes |
 | <a name="input_controlplane_instances"></a> [controlplane\_instances](#input\_controlplane\_instances) | Number of controlplane instances to deploy. | `number` | `3` | no |
 | <a name="input_namespace"></a> [namespace](#input\_namespace) | Project namespace to use for a unique and consistent naming convention. | `string` | `"talos"` | no |
 | <a name="input_region"></a> [region](#input\_region) | Name of the Azure region to deploy resources. | `string` | `"australiasoutheast"` | no |
 | <a name="input_subnet_address_spaces"></a> [subnet\_address\_spaces](#input\_subnet\_address\_spaces) | Address space for the Talos subnet. | `list(string)` | <pre>[<br>  "192.168.254.0/24"<br>]</pre> | no |
 | <a name="input_vnet_address_space"></a> [vnet\_address\_space](#input\_vnet\_address\_space) | Address space for Talos virtual network. | `string` | `"192.168.254.0/23"` | no |
-| <a name="input_worker_admin"></a> [worker\_admin](#input\_worker\_admin) | Admin username for worker VMs but don't expect it to be useful. | `string` | n/a | yes |
 | <a name="input_worker_instances"></a> [worker\_instances](#input\_worker\_instances) | Number of worker instances to deploy. | `number` | `1` | no |
 
 ## Outputs
