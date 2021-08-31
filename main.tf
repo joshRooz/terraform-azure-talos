@@ -33,6 +33,16 @@ resource "azurerm_storage_account" "this" {
   shared_access_key_enabled = false
 }
 
+resource "azurerm_storage_account_network_rules" "this" {
+  storage_account_name = azurerm_storage_account.this.name
+  resource_group_name  = azurerm_resource_group.this.name
+
+  default_action             = "Deny"
+  ip_rules                   = [data.http.tf_client.body]
+  virtual_network_subnet_ids = [azurerm_subnet.this.id]
+  bypass                     = ["None"]
+}
+
 resource "azurerm_storage_container" "this" {
   name                 = "vhds"
   storage_account_name = azurerm_storage_account.this.name
@@ -133,6 +143,8 @@ resource "azurerm_subnet" "this" {
   resource_group_name  = azurerm_resource_group.this.name
   virtual_network_name = azurerm_virtual_network.this.name
   address_prefixes     = var.subnet_address_spaces
+
+  service_endpoints = ["Microsoft.Storage"]
 }
 
 resource "azurerm_subnet_network_security_group_association" "this" {
