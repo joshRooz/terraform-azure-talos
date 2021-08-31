@@ -270,7 +270,7 @@ resource "azurerm_virtual_machine" "controlplane" {
 
   os_profile {
     computer_name  = join("-", ["vm", random_pet.this.id, "controlplane", each.value])
-    admin_username = var.controlplane_admin
+    admin_username = "wvwiwvbuzzzzzpzuikbpqswpz" # nil
     custom_data    = file("./controlplane.yaml")
   }
 
@@ -278,7 +278,7 @@ resource "azurerm_virtual_machine" "controlplane" {
     disable_password_authentication = true
     ssh_keys {
       key_data = file("./dummy.pub")
-      path     = "/home/${var.controlplane_admin}/.ssh/authorized_keys"
+      path     = "/home/wvwiwvbuzzzzzpzuikbpqswpz/.ssh/authorized_keys"
     }
   }
 
@@ -333,7 +333,7 @@ resource "azurerm_virtual_machine" "worker" {
 
   os_profile {
     computer_name  = join("-", ["vm", random_pet.this.id, "worker", each.value])
-    admin_username = var.worker_admin
+    admin_username = "zoftwedghyintpxgcwainzajq" # nil
     custom_data    = file("./join.yaml")
   }
 
@@ -341,7 +341,7 @@ resource "azurerm_virtual_machine" "worker" {
     disable_password_authentication = true
     ssh_keys {
       key_data = file("./dummy.pub")
-      path     = "/home/${var.controlplane_admin}/.ssh/authorized_keys"
+      path     = "/home/zoftwedghyintpxgcwainzajq/.ssh/authorized_keys"
     }
   }
 

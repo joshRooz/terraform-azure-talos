@@ -33,12 +33,6 @@ variable "controlplane_instances" {
   }
 }
 
-variable "controlplane_admin" {
-  description = "Admin username for controlplane VMs but don't expect it to be useful."
-  type        = string
-  sensitive   = true
-}
-
 variable "worker_instances" {
   description = "Number of worker instances to deploy."
   type        = number
@@ -48,10 +42,4 @@ variable "worker_instances" {
     condition     = try(tonumber(var.worker_instances) > 0 && tonumber(var.worker_instances) < 99)
     error_message = "The number of instances must be between 1 and 99."
   }
-}
-
-variable "worker_admin" {
-  description = "Admin username for worker VMs but don't expect it to be useful."
-  type        = string
-  sensitive   = true
 }
